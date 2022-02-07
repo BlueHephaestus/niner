@@ -1,0 +1,67 @@
+
+bank of responses already saved, could be easily grabbed from and copied to clipboard using pyperclip.copy()
+
+then it could be hooked up to run this program with different args in order to copy diff things to clipboard, hwoever
+	that wouldn't solve the problem of dynamically adding new things to the clipboard.
+
+pyperclip.copy phrase
+	with txt files for each phrase
+	or even just have it constantly viewing and showing the updated list in one window, and it's polling for new ones.
+	Then you could call it with one command, keybind, to call it, but it still needs something to add new ones to it.
+
+
+
+lets say i've got text "asdf" selected. can i 
+
+	yes 
+
+import os
+print(os.popen('xsel').read())
+
+
+better points if we can have a keybind set for only these, rather than having to add them to i3 or something
+
+
+
+
+
+we need a prefix for all keymaps, something fast
+	99 or 33 will do
+
+maps/
+	a.txt - <prefix> + a produces the content in this file
+	b.txt
+
+list.py
+	prints all available keymaps with the first few lines of text
+	will be looking through the datatfiles for these
+	runs separately from main.py
+
+main.py
+	listens to and triggers events on keypresses
+	Both the saved ones, and the inputs that add new ones
+
+Change bulkadd to shell.py
+	normal input is trigger
+	two args is op on triggger, i.e. rm x, mv x y, cp x y
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
