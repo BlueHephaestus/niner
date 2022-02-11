@@ -1,6 +1,6 @@
 import keyboard as listener
 from pynput.keyboard import Key, Controller
-import os, time, sys
+import os, time, sys, subprocess
 """
 Main file - handles all existing events, listening for them and adding new ones
 	when created.
@@ -20,6 +20,10 @@ We have it configured so that there can be any length hotkeys, and assumed witho
 sender = Controller()
 metahotkey = "ctrl+9"
 wrap_n = 100
+
+def say(s):
+	# Speak the given string, and hide stderr. Use what you have if it's simple (espeak).
+	subprocess.check_output(['espeak',f'"{s}"','-s','160','-a','30','-z'], stderr=subprocess.DEVNULL)
 
 def slowtype(s):
 	# Sometimes type breaks on clients with latency, so we add a tiny delay to fix this
@@ -48,6 +52,7 @@ class Hotkey:
 		self._handler = listener.add_word_listener(trigger[:-1], self.optimized_callback, triggers=[trigger[-1]], match_suffix=False)
 
 		#print(f"Loaded Hotkey '{self.trigger}' for '{self.replacement[:wrap_n]}...'")
+		self.delay = 0
 
 		# Characters that keyboard library can't handle, because it sucks,
 		# and their resulting mapping which the shift key is applied to.
@@ -70,15 +75,32 @@ class Hotkey:
 			# At the end if we still have a chunk to write, we write that.
 			chunk = ""
 			for letter in self.replacement:
+				"""
+				# Tried out limiting size, doesn't seem to make a diff
+				if len(chunk) > 10:
+					listener.write(chunk)
+					chunk = ""
+				"""
 				if letter not in self.shift_map:
 					chunk += letter
 				else:
 					# letter is in our map
+					if self.delay != 0:
+						time.sleep(self.delay)
 					listener.write(chunk)
 					listener.press_and_release('shift+' + self.shift_map[letter])
 					chunk = ""
+
 			if chunk != "":
 				listener.write(chunk)
+		else:
+			# Used to enable/disable typing delay
+			if self.delay == 0:
+				say("Slow Mode Enabled")
+				self.delay = 0.1
+			else:
+				say("Slow Mode Disabled")
+				self.delay = 0
 		print(time.time()-t)
 
 
@@ -182,6 +204,9 @@ if __name__ == "__main__":
 				# e.g. btw.txt -> "By the way, "
 				replacement = open(hotkey_dir + hotkey_fname).read().strip()
 				hotkeys[trigger] = Hotkey(trigger, abbreviation=True, replacement=replacement)
+
+		# Temp, trying to add one for slow mode toggle.
+		hotkeys["sm9"] = Hotkey("sm9", abbreviation=False, replacement=None)
 
 		# Start listening for our metahotkey - to add new hotkeys.
 		# This is not included in the files to avoid conflicts. Do not overwrite it.
