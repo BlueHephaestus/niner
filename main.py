@@ -28,7 +28,7 @@ def slowtype(s):
 		time.sleep(0.001)
 		sender.tap(c)
 
-sender.type = slowtype
+#sender.type = slowtype
 
 class Hotkey:
 	def __init__(self, trigger, abbreviation=True, replacement=""):
@@ -45,11 +45,45 @@ class Hotkey:
 		self.replacement = replacement
 
 		# Stuff to ensure we trigger when we want to with this library
-		self._handler = listener.add_word_listener(trigger[:-1], self.callback, triggers=[trigger[-1]], match_suffix=False)
+		self._handler = listener.add_word_listener(trigger[:-1], self.optimized_callback, triggers=[trigger[-1]], match_suffix=False)
 
 		#print(f"Loaded Hotkey '{self.trigger}' for '{self.replacement[:wrap_n]}...'")
 
+		# Characters that keyboard library can't handle, because it sucks,
+		# and their resulting mapping which the shift key is applied to.
+		self._shift_upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}|:"<>?'
+		self._shift_lower = "abcdefghijklmnopqrstuvwxyz`1234567890-=[]\;',./"
+		self.shift_map = {upper:lower for upper,lower in zip(self._shift_upper, self._shift_lower)}
+
+	def optimized_callback(self):
+		t = time.time()
+		if self.abbreviation:
+			print(f"Triggered Hotkey '{self.trigger}' for '{self.replacement[:wrap_n]}...'")
+			# Erase the input trigger string
+			# For some reason pynput doesn't like '\b'
+			for _ in range(len(self.trigger)):
+				sender.tap(Key.backspace)
+
+			# Iterate through letters, and try to minimize calls to .write
+			# So we put all lowercase characters into chunks, 
+			# separated when an upper case character comes along.
+			# At the end if we still have a chunk to write, we write that.
+			chunk = ""
+			for letter in self.replacement:
+				if letter not in self.shift_map:
+					chunk += letter
+				else:
+					# letter is in our map
+					listener.write(chunk)
+					listener.press_and_release('shift+' + self.shift_map[letter])
+					chunk = ""
+			if chunk != "":
+				listener.write(chunk)
+		print(time.time()-t)
+
+
 	def callback(self):
+		t = time.time()
 		if self.abbreviation:
 			print(f"Triggered Hotkey '{self.trigger}' for '{self.replacement[:wrap_n]}...'")
 			# Erase the input trigger string
@@ -57,6 +91,7 @@ class Hotkey:
 			for _ in range(len(self.trigger)):
 				sender.tap(Key.backspace)
 			sender.type(self.replacement) # Type what this was an abbreviation for
+		print(time.time()-t)
 	
 	def remove(self):
 		# Lib doesn't handle this properly for when there are multiple with the
