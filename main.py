@@ -23,7 +23,8 @@ wrap_n = 100
 
 def say(s):
 	# Speak the given string, and hide stderr. Use what you have if it's simple (espeak).
-	subprocess.check_output(['espeak',f'"{s}"','-s','160','-a','30','-z'], stderr=subprocess.DEVNULL)
+	#subprocess.check_output(['espeak',f'"{s}"','-s','160','-a','30','-z'], stderr=subprocess.DEVNULL)
+	subprocess.Popen(['espeak',f'"{s}"','-s','160','-a','30','-z'], stderr=subprocess.DEVNULL)
 
 def slowtype(s):
 	# Sometimes type breaks on clients with latency, so we add a tiny delay to fix this
@@ -166,6 +167,7 @@ def add_new_hotkey():
 	# ever accidentally type it in.
 	# This will now save that forever, unless i delete the "9btw.txt" file in the hotkeys folder.
 	# Any future types of "9btw" will automatically insert that.
+	say("Listening")
 	print("Current clipboard grabbed. Type your abbreviation/hotkey now...")
 	replacement = os.popen('xsel').read()
 
@@ -183,8 +185,10 @@ def add_new_hotkey():
 			f.write(replacement)
 
 		print(f"Saved Hotkey '{trigger}' for '{replacement[:wrap_n]}'...")
+		say("Saved")
 	else:
 		print("Ignoring Hotkey and Refreshing...")
+		say("Ignoring")
 		
 	
 
