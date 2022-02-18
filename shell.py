@@ -39,15 +39,19 @@ class NinerShell(cmd.Cmd):
     def do_abbr(self, args):
         'Add a new trigger, payload pair as an abbreviation (trigger must be alone): abbr <trigger> <payload>, e.g. abbr ty thank you'
         # if one exists then it will be replaced with this
-        try:
-            trigger, payload = parse(args)
-            with open(trigger_dir + trigger + ".txt", "w") as f:
-                f.write(payload)
+        #try:
+        trigger, payload = parse(args)
+        with open(trigger_dir + trigger + ".txt", "w") as f:
+            f.write(payload)
+        # Add capitalized counterpart if not already there
+        # Note: doesn't include this case in the other cases. Just helps add more.
+        if trigger[0] != "0":
+            self.do_abbr("0" + trigger + " " + payload.capitalize())
 
-            printgreen(f"Added Abbreviation {trigger} -> {payload}")
+        printgreen(f"Added Abbreviation {trigger} -> {payload}")
 
-        except:
-            printred("Error encountered trying to add abbreviation. Make sure your trigger is a valid filename.")
+        #except:
+        #printred("Error encountered trying to add abbreviation. Make sure your trigger is a valid filename.")
 
     def do_blob(self, args):
         'Add a new trigger, payload pair as a blob (trigger can be anywhere): blob <trigger> <payload>, e.g. blob np no problem'
@@ -158,7 +162,8 @@ class NinerShell(cmd.Cmd):
             fnames = sorted([fname for fname in os.listdir(trigger_dir)])
             for fname in fnames:
                 trigger, ext = os.path.splitext(fname)
-                if ext == ".txt" and trigger.startswith(query):
+                #if ext == ".txt" and trigger.startswith(query):
+                if ext == ".txt" and query in trigger:
                     payload = open(trigger_dir + fname).read().strip()
                     print(f"{bcolors.OKGREEN}{trigger.ljust(10)} -> {bcolors.OKBLUE}{payload}{bcolors.ENDC}")
         except:

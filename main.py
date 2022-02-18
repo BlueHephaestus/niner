@@ -131,11 +131,12 @@ class Trigger:
 		#self.payload = self.payload[:6].replace(self.trigger[-1], self.trigger[-1]*2) + self.payload[6:]
 
 		mitigated = False
+		mitigation_threshold = 24
 
 		for i,letter in enumerate(self.payload):
 			time.sleep(self.delay)
 			if letter not in self.shift_map:
-				if i < 12 and letter == self.trigger[-1] and not mitigated:
+				if i < mitigation_threshold and letter == self.trigger[-1] and not mitigated:
 					listener.write(letter*2)
 					mitigated = True
 				else:
@@ -253,7 +254,7 @@ if __name__ == "__main__":
 			#listener.wait(metatrigger)
 
 			# Trying this out, needs to be infrequent but keep reloading
-			time.sleep(30)
+			time.sleep(10)
 
 			# Remove any triggers so we can overwrite if the new trigger needs to.
 			for trigger, trigger_obj in triggers.items():
