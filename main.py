@@ -1,5 +1,4 @@
 import keyboard as listener
-from pynput.keyboard import Key, Controller
 import os, time, sys, subprocess
 """
 Main file - handles all existing events, listening for them and adding new ones
@@ -20,7 +19,6 @@ We define triggers as the key sequence that causes an action,
 and payloads as the action resulting from the trigger.
 """
 
-sender = Controller()
 metatrigger = "ctrl+9"
 wrap_n = 100
 
@@ -49,7 +47,9 @@ class Trigger:
 		"""
 		self.trigger = trigger
 		self.payload = payload
-		self.delay = 0.001
+		#self.delay = 0.001
+		self.delay = 0.01 # LATENCY SUCKS
+		self.use_mitigation=False
 
 		self.callback = self.slow_callback if self.delay != 0 else self.fast_callback
 
@@ -111,6 +111,7 @@ class Trigger:
 		# For some reason pynput doesn't like '\b'
 		for _ in range(len(self.trigger)):
 			#sender.tap(Key.backspace)
+			time.sleep(self.delay)
 			listener.press_and_release('backspace')
 
 		# For the slow one, use our delay and send them one at a time
@@ -131,18 +132,25 @@ class Trigger:
 		#self.payload = self.payload[:6].replace(self.trigger[-1], self.trigger[-1]*2) + self.payload[6:]
 
 		mitigated = False
-		mitigation_threshold = 24
+		mitigation_threshold = 32
 
 		for i,letter in enumerate(self.payload):
 			time.sleep(self.delay)
 			if letter not in self.shift_map:
-				if i < mitigation_threshold and letter == self.trigger[-1] and not mitigated:
-					listener.write(letter*2)
-					mitigated = True
+				if self.use_mitigation:
+					if i < mitigation_threshold and letter == self.trigger[-1] and not mitigated:
+						listener.write(letter*2)
+						mitigated = True
+					else:
+						listener.write(letter)
 				else:
 					listener.write(letter)
 			else:
 				# letter is in our map
+				if self.use_mitigation:
+					if i < mitigation_threshold and self.shift_map[letter]== self.trigger[-1] and not mitigated:
+						listener.press_and_release('shift+' + self.shift_map[letter])
+						mitigated = True
 				listener.press_and_release('shift+' + self.shift_map[letter])
 
 	def remove(self):
