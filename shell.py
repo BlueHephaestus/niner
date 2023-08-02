@@ -6,6 +6,7 @@ Extension to just bulkadd, this will actually functiona as a shell interface to 
 import cmd, sys
 import os.path
 import shutil
+from utils.loop_utils import persistent
 
 trigger_dir = "triggers/"
 blob_prefix = "blob-"
@@ -190,5 +191,9 @@ def parse(arg):
     'Convert a series of strings to an argument tuple (trigger, payload)'
     return tuple(arg.split(maxsplit=1))
 
+@persistent
+def main():
+	NinerShell().cmdloop()
+
 if __name__ == '__main__':
-    NinerShell().cmdloop()
+	main()
